@@ -9,7 +9,7 @@ output: html_document
 
 ```{r setup, include=FALSE, warning=FALSE, message=FALSE}
 
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.width = 10)
 
 library(tidyverse)
 library(haven)
@@ -118,14 +118,10 @@ p
 
 ```{r}
 
-
-check = df %>%
-  filter(vrec == 10000070)
-
 rms = df %>%
   mutate(rm = av_loss/max_potential_losses) %>%
   group_by(vrec) %>%
-  summarise(RM_Total = sum(rm))
+  summarise(RM_Total = sum(rm), SPENT_total = sum(cost_sav), AVOIDED_total = sum(av_loss))
 
 firm_characteristics = df %>%
   group_by(vrec) %>%
@@ -182,6 +178,68 @@ b
 
 ```
 
+# RMs versus Infrastructure
+
+```{r}
+
+rm.df %>%
+  ggplot(aes(x = bi_employees_unable_to_work, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw() +
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_employees_moved_away, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_communications, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_supply_chain, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_power_outages, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_natural_gas_outages, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_water_outages, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+rm.df %>%
+  ggplot(aes(x = bi_transportation, y = RM_Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "red") +
+  theme_bw()+
+  facet_wrap(~industry_codes)
+
+
+```
 
 # RMs versus Property Damage
 
@@ -191,13 +249,73 @@ rm.df %>%
   mutate(log.prop = log(property_damage_estimate + 1)) %>%
   ggplot(aes(y = RM_Total, x = log.prop)) +
   geom_point() +
-  geom_smooth(method = "lm",formula = y ~ poly(x, 2)) +
+  geom_smooth(method = "lm",formula = y ~ poly(x, 2), se = FALSE, color = "red") +
   ylab("Overall Firm RM") +
   xlab("log(Property Damage)") +
   theme_bw()
 
 ```
 
+
+# Diruptions by Hurricane
+
+```{r}
+
+dff = wide.df %>%
+  group_by(hurricane) %>%
+  summarise("Supply Chain Disruptions" = mean(bi_supply_chain, na.rm = T),
+            "Employees Unable to \nTravel to Work     " = mean(bi_employees_unable_to_work, na.rm = T),
+            "Transportation Disruption" = mean(bi_transportation, na.rm = T),
+            "Communication Problems" = mean(bi_communications, na.rm = T),
+            "Power Outages" = mean(bi_power_outages, na.rm = T),
+            "Water Outages" = mean(bi_water_outages, na.rm = T),
+            "Gas Outages" = mean(bi_natural_gas_outages, na.rm = T),
+            "Employees Moved Away" = mean(bi_employees_moved_away, na.rm = T)
+            )
+
+dff = dff %>%
+  gather(key = BI, value = Average, "Supply Chain Disruptions":"Employees Moved Away", factor_key = T)
+
+p = dff %>%
+  mutate(Hurricane = ifelse(hurricane == 0, "Sandy", "Harvey")) %>%
+  ggplot() +
+  geom_bar(aes(x = BI, y = Average, fill = Hurricane), stat = "identity", position = position_dodge()) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1)) +
+  xlab("") +
+  ylab("Average Impact (%)\non Business Interruption") +
+  scale_fill_brewer()
+
+p
+
+```
+
+
+# RM versus BRC
+
+```{r}
+
+rm.df2 = rm.df %>%
+  filter(SPENT_total != 0) %>%
+  mutate(BCR_total = AVOIDED_total/SPENT_total)%>%
+  filter(BCR_total > 0 & BCR_total < 10)
+
+
+rm.df2 %>%
+  ggplot(aes(x = RM_Total, y = BCR_total)) +
+  geom_point(aes(color = industry_codes)) +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), aes(color = industry_codes), se = FALSE) +
+  geom_smooth(method = 'lm', formula = y~ poly(x, 2), color = 'black', se = FALSE) +
+  theme_bw() +
+  scale_color_brewer(palette="Paired", name = "Industry",
+                      labels = c("Agriculture, Mining,\nand Construction",
+                               "Transportation, Communications,\nand Utilities",
+                               "Manufacturing",
+                               "Wholesale, Retail, Trade",
+                               "Finance, Insurance,\nand Real Estate",
+                               "Service Sector"))
+
+```
 
 
 # Avoided Losses Versus Max Potential Losses
