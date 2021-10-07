@@ -73,6 +73,19 @@ df3 = df %>%
 
 ```
 
+# Loss share
+
+* We develop the loss share (LS) metric to answer the question: Are losses from some disruption types less avoidable?
+
+The loss share of disruption $d$ for firm $i$ is:
+
+$$ LS_{d,i} = \frac{BI_{d,i}\% * LostSR_i}{NoDisasterSR_i} - \frac{BI_{d,i}\% * MaxPotentialLoss_i}{No DisasterSR_i}  $$
+Which is equal to:
+
+$$ LS_{d,i} = BI_{d,i} * RM_i  $$
+
+* ***Interpretation***: A higher LS means that the firm experiencing the disruption was able to avoid more of its maximum potential losses. 
+
 ```{r}
 
 df4 = df %>%
@@ -80,6 +93,133 @@ df4 = df %>%
   mutate(Total_AvLoss = sum(av_loss)) %>%
   ungroup()
 
+df5 = df4 %>%
+  mutate(RM_Total = Total_AvLoss / max_potential_losses) %>%
+  mutate(LS_emp_cant_work = bi_employees_unable_to_work / 100 * RM_Total) %>%
+  mutate(LS_moved_away = bi_employees_moved_away / 100 * RM_Total) %>%
+  mutate(LS_communications = bi_communications  / 100 * RM_Total) %>%
+  mutate(LS_Supply_Chain = bi_supply_chain / 100 * RM_Total) %>%
+  mutate(LS_Transportation = bi_transportation / 100 * RM_Total) %>%
+  mutate(LS_Power = bi_power_outages / 100 * RM_Total) %>%
+  mutate(LS_Gas = bi_natural_gas_outages / 100 * RM_Total) %>%
+  mutate(LS_Water = bi_water_outages / 100 * RM_Total)
 
+df6 = df5 %>%
+  group_by(vrec) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(vrec, industry_codes, starts_with("LS"))
+
+
+df6 = df6 %>%
+  gather(LS_Type, LS, LS_emp_cant_work:LS_Water)
+
+df6 %>%
+  ggplot(aes(x = LS_Type, y = LS)) +
+  geom_boxplot() +
+  ylab("Loss Share") +
+  xlab("Disruption Type") +
+  ggtitle("Observed Loss Shares") +
+  theme_classic()
+
+
+
+```
+
+
+
+```{r}
+
+df6 %>%
+  filter(LS_Type %in% c('LS_Power', 'LS_Gas', 'LS_Water')) %>%
+  ggplot(aes(x = LS_Type, y = LS)) +
+  geom_boxplot(aes(fill = industry_codes)) +
+  ylab("Loss Share") +
+  xlab("Disruption Type") +
+  ggtitle("Observed Loss Shares From Infrastructure, By Industry") +
+  theme_classic() + 
+  scale_fill_brewer(palette="Paired", name = "Industry",
+                      labels = c("Agriculture, Mining,\nand Construction",
+                               "Transportation, Communications,\nand Utilities",
+                               "Manufacturing",
+                               "Wholesale, Retail, Trade",
+                               "Finance, Insurance,\nand Real Estate",
+                               "Service Sector")) +
+  theme(legend.position="top")
+
+```
+
+# Loss Triangle
+
+
+* *Possible paper direction* compare analyses between loss triangle metrics and max potential loss metrics. 
+* Question: I'm not sure what to use for:
+
+$$ LossTriangle = \frac{BI\%*LostSR_I}{SRNoDisaster_i}  $$
+
+Is it: If Sandy, use month after and if Harvey use SR lost during recovery or SR lost year after?
+
+## Figures
+
+These tells us what proportion of the loss triangle is due to each of the disruptions. 
+
+```{r}
+
+df7 = df %>%
+  mutate(lost_nod = ifelse(hurricane == 0 ,month_lost_sales__percent, annual_lost_sales__percent)) %>%
+  mutate(lost_nod = lost_nod / 100) %>%
+  mutate(LT_emp_cant_work = bi_employees_unable_to_work / 100 * lost_nod) %>%
+  mutate(LT_moved_away = bi_employees_moved_away / 100 * lost_nod) %>%
+  mutate(LT_communications = bi_communications  / 100 * lost_nod) %>%
+  mutate(LT_Supply_Chain = bi_supply_chain / 100 * lost_nod) %>%
+  mutate(LT_Transportation = bi_transportation / 100 * lost_nod) %>%
+  mutate(LT_Power = bi_power_outages / 100 * lost_nod) %>%
+  mutate(LT_Gas = bi_natural_gas_outages / 100 * lost_nod) %>%
+  mutate(LT_Water = bi_water_outages / 100 * lost_nod)
+
+
+```
+
+
+```{r}
+
+
+df8 = df7 %>%
+  group_by(vrec) %>%
+  slice(1) %>%
+  ungroup() %>%
+  select(vrec, industry_codes, starts_with("LT"))
+
+df8 = df8 %>%
+  gather(LT_Type, LT, LT_emp_cant_work:LT_Water)
+
+df8 %>%
+  ggplot(aes(x = LT_Type, y = LT)) +
+  geom_boxplot() +
+  ylab("Loss Triangle") +
+  xlab("Disruption Type") +
+  ggtitle("Observed Loss Triangles") +
+  theme_classic()
+
+```
+
+```{r}
+
+df8 %>%
+  filter(LT_Type %in% c('LT_Power', 'LT_Gas', 'LT_Water')) %>%
+  ggplot(aes(x = LT_Type, y = LT)) +
+  geom_boxplot(aes(fill = industry_codes)) +
+  ylab("Loss Triangle") +
+  xlab("Disruption Type") +
+  ggtitle("Observed Loss Triangles From Infrastructure, By Industry") +
+  theme_classic() + 
+  scale_fill_brewer(palette="Paired", name = "Industry",
+                      labels = c("Agriculture, Mining,\nand Construction",
+                               "Transportation, Communications,\nand Utilities",
+                               "Manufacturing",
+                               "Wholesale, Retail, Trade",
+                               "Finance, Insurance,\nand Real Estate",
+                               "Service Sector")) +
+  theme(legend.position="top")
 
 ```
