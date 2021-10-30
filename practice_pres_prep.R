@@ -105,9 +105,16 @@ hdff$BI = factor(hdff$BI)
 levels(hdff$BI) = c("Communications", "Employees Moved", "Employees Can't Work", "Facility Underwater",
                     "Gas Outage", "Power Outage", "Supply Chain", "Transportation", "Water Outage")
 
-hdff %>%
+b = hdff %>%
   ggplot(aes(x = BI, y = Percent)) +
   geom_boxplot(aes(fill = BI)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1)) 
+  theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1)) +
+  theme(legend.position = "none") +
+  facet_wrap(~industry_codes1) +
+  xlab("Disruption Type") +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer()
   
+b
