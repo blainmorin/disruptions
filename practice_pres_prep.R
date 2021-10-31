@@ -46,12 +46,13 @@ levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
 
 
 temp1 = hdf %>%
-  select(vrec,industry_codes1, w, RM, wRM)
+  mutate("Lost SR" = annual_lost_sales__percent / 100) %>%
+  select(vrec,industry_codes1, w, RM, wRM, "Lost SR")
 
 temp1 = temp1 %>%
-  gather(key = "Metric", value = "Value", w:wRM)
+  gather(key = "Metric", value = "Value", w:"Lost SR")
 
-temp1$Metric = factor(temp1$Metric, levels = c("w", "RM", "wRM"))
+temp1$Metric = factor(temp1$Metric, levels = c("w", "RM", "wRM", "Lost SR"))
 
 a = temp1 %>%
   ggplot(aes(x = Metric, y = Value)) +
@@ -107,6 +108,7 @@ levels(hdff$BI) = c("Communications", "Employees Moved", "Employees Can't Work",
                     "Gas Outage", "Power Outage", "Supply Chain", "Transportation", "Water Outage")
 
 b = hdff %>%
+  filter(Percent != 0) %>%
   ggplot(aes(x = BI, y = Percent)) +
   geom_boxplot(aes(fill = BI)) +
   theme_bw() +
@@ -124,7 +126,7 @@ b
 ###############################################################################
 ###############################################################################
 
-# w and Tactic Use
+# Number of Tactics Used
 
 
 hdf = harvey %>%
@@ -159,20 +161,25 @@ hdff = hdf %>%
 
 hdf$n_tactics = hdff
 
-c = hdf %>%
-  ggplot(aes(y = n_tactics)) +
-  geom_point(aes(x = w), color = "blue", alpha = .5) +
-  geom_smooth(aes(x = w), method = "lm", color = "blue", se = FALSE, alpha = .5) +
-  geom_point(aes(x = wRM), color = "orange", alpha = .5) +
-  geom_smooth(aes(x = wRM), method = "lm", color = "orange", se = FALSE, alpha = .5) +
+hdfff = hdf %>%
+  select(vrec, industry_codes1, n_tactics, w, RM, wRM, annual_lost_sales__percent) %>%
+  mutate(annual_lost_sales__percent = annual_lost_sales__percent / 100) %>%
+  rename("Lost SR" = annual_lost_sales__percent) %>%
+  gather(key = "Metric", value = "Percent", w:"Lost SR")
+
+c = hdfff %>%
+  ggplot(aes(x = Percent, y = n_tactics)) +
+  geom_point(aes(color = Metric), alpha = .6) +
+  geom_smooth(method = "lm", aes(color = Metric), se = FALSE, size = 1.2, alpha = .8) +
   facet_wrap(~industry_codes1) +
   theme_bw() +
   theme(strip.background =element_rect(fill="black")) +
   theme(strip.text = element_text(colour = 'white')) +
   ylab("Number of Tactics Used") +
-  xlab("w (Blue), wRM (Orange)")
-
-c
+  xlab("") +
+  scale_color_brewer(type = "qual", palette = 3)
+  
+ggplotly(c)
 
 
 ###############################################################################
@@ -313,7 +320,7 @@ levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
 
 
 hdff = hdf %>%
-  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_other)
+  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
 
 hdff$BI_Type = as.factor(hdff$BI_Type)
 levels(hdff$BI_Type) = c("Communication",
@@ -321,7 +328,6 @@ levels(hdff$BI_Type) = c("Communication",
                          "Employees Can't Work",
                          "Facility Underwater",
                          "Gas Outage",
-                         "Other",
                          "Power Outage",
                          "Supply Chain",
                          "Transportation",
@@ -363,6 +369,177 @@ i = hdfff %>%
 
 i  
 
+j = hdfff %>%
+  ggplot(aes(x = annual_lost_sales__percent, y = iBI)) +
+  geom_density_ridges(aes(fill = iBI), quantiles = 2, quantile_lines = TRUE) +
+  facet_wrap(~BI_Type) +
+  scale_y_discrete(limits = c("Low", "High")) +
+  theme_bw() +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer(type = "qual", palette = 3) +
+  ylab("Percent Contributing To BI") +
+  xlab("Percent Lost Sales Revenue") +
+  theme(legend.position = "none") 
+
+j
+
+###############################################################################
+###############################################################################
 
 
+### Tactics and BI
 
+hdf = harvey %>%
+  select(vrec, 
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes,
+         starts_with("bi", ignore.case = FALSE),
+         43:53) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes)) 
+
+hdf$industry_codes1 = hdf$industry_codes
+levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
+                                "Transportation, Communications,\nand Utilities",
+                                "Manufacturing",
+                                "Wholesale, Retail, Trade",
+                                "Finance, Insurance,\nand Real Estate",
+                                "Service Sector")
+
+
+hdff = hdf %>%
+  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
+
+hdff$BI_Type = as.factor(hdff$BI_Type)
+levels(hdff$BI_Type) = c("Communications",
+                         "Employees Moved",
+                         "Employees Can't Work",
+                         "Facility Underwater",
+                         "Gas Outage",
+                         "Power Outage",
+                         "Supply Chain",
+                         "Transportation",
+                         "Water Outage")
+
+
+hdfff = hdff %>%
+  gather(key = "Tactic", "Use", conservation:resource_sharing)
+
+hdfff$Tactic = as.factor(hdfff$Tactic)
+levels(hdfff$Tactic) = c("Conservation",
+                         "Excess Capacity",
+                         "Import Substitution",
+                         "Input Substitution",
+                         "Inventories",
+                         "Management\nEffectiveness",
+                         "Production\nRecapture",
+                         "Relocation",
+                         "Resource\nIsolation",
+                         "Resource\nSharing",
+                         "Technological\nChange")
+
+
+k = hdfff %>%
+  filter(Use == 1) %>%
+  filter(Percent > 0) %>%
+  ggplot(aes(y = BI_Type, x = Percent)) +
+  geom_density_ridges(aes(fill = BI_Type), rel_min_height = .02) +
+  facet_wrap(~Tactic) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer() +
+  xlim(0,100)
+
+k
+
+###############################################################################
+###############################################################################
+
+
+### Tactics and w SR
+
+hdf = harvey %>%
+  select(vrec, 
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes,
+         starts_with("bi", ignore.case = FALSE),
+         43:53) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes)) 
+
+hdf$industry_codes1 = hdf$industry_codes
+levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
+                                "Transportation, Communications,\nand Utilities",
+                                "Manufacturing",
+                                "Wholesale, Retail, Trade",
+                                "Finance, Insurance,\nand Real Estate",
+                                "Service Sector")
+
+
+hdff = hdf %>%
+  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
+
+hdff$BI_Type = as.factor(hdff$BI_Type)
+levels(hdff$BI_Type) = c("Communications",
+                         "Employees Moved",
+                         "Employees Can't Work",
+                         "Facility Underwater",
+                         "Gas Outage",
+                         "Power Outage",
+                         "Supply Chain",
+                         "Transportation",
+                         "Water Outage")
+
+
+hdfff = hdff %>%
+  gather(key = "Tactic", "Use", conservation:resource_sharing)
+
+hdfff$Tactic = as.factor(hdfff$Tactic)
+levels(hdfff$Tactic) = c("Conservation",
+                         "Excess Capacity",
+                         "Import Substitution",
+                         "Input Substitution",
+                         "Inventories",
+                         "Management\nEffectiveness",
+                         "Production\nRecapture",
+                         "Relocation",
+                         "Resource\nIsolation",
+                         "Resource\nSharing",
+                         "Technological\nChange")
+
+
+hd4 = hdfff %>%
+  filter(Use == 1) %>%
+  mutate("Lost SR" = annual_lost_sales__percent / 100) %>%
+  gather(key = "Metric", value = "Value", c("Lost SR", w)) 
+
+l = hd4 %>%
+  ggplot(aes(x = Metric, y = Value)) +
+  geom_boxplot(aes(fill = Metric)) +
+  facet_wrap(~Tactic)+
+  theme_bw() +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer() +
+  xlab("")
+
+l
