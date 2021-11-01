@@ -1,0 +1,60 @@
+---
+title: "Empirical Estimation of Economic Resilience to Infrastructure Disruptions"
+author: "C. Blain Morin$^1$, Noah Dormady$^1$, Adam Rose$^2$"
+institute: "$^1$The Ohio State University, $^2$ University of Southern California"
+date: "11/1/21"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(tidyverse)
+library(ggridges)
+library(haven)
+library(plotly)
+
+
+```
+
+# Overview
+
+* **Research Question:** Are businesses more/less resilient to certain infrastructure disruptions?
+  * I.e., Are losses from some disruption types more/less avoidable?
+
+* **Who cares?** 
+  * Policy makers, city planners, disaster managers, individual firms
+
+* **Data** 
+  * Survey from firms affected by Hurricane Harvey
+
+* **Contributions**
+  * Resilience measurement 
+  * Empirical framework to guide further research
+
+
+---
+
+# What is resilience?
+
+* Ability of a system to absorb shocks
+  * Focus on the **bounce-back** to normal or a "new" normal 
+
+* Economic Resilience:
+  * Focus on actions that occur after an event with the goal of reducing business interruptions (BI)
+  * *Efficient* use of remaining resources
+
+![](resibubbles.PNG)
+
+---
+
