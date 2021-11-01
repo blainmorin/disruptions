@@ -931,11 +931,33 @@ l
 
 ---
 
-# Conclusion
+# Applications / Conclusion
+
+* Metrics and survey method apply generally to any type of disaster or shock
+
+* Need to think beyond losses in output or sales revenue to fully capture resilience
+
+* Need for more data
+  * Continuing data collection at resiliencecalculator.com
+
+* Identifying where and when firms struggle to bounce back could guides mitigation efforts
+
+* Identifying where and when firms are able to bounce back could bolster resilience policies
+
+
+???
+
+- Overall, we find that firms in our sample generally lost a substantial amount of sales revenue and struggled to avoid business interruption in the year after Hurricane Harvey. In this specific instance, we weren't able to detect a difference between weighted RMs and different business disruptions.
+
+- However, the proposed weighted resilience metric and methodology can be applied to generally to other disaster contexts. General need for more resilience data. We recently released software that administers the survey instrument at resiliencecalculator.com.
+
+- All in all, identifying when resilience benefits are possible can help guide disaster management strategies and direct scarce resources toward more impactful strategies. 
+
+- That's all I have for now. Thank you for listening, I look forward to any comments, questions, or suggestions. 
 
 ---
 
 # Questions?
 
-* Thank you for your attention!
+* Thank you! Thank you!
 * My email: morin.42@osu.edu
