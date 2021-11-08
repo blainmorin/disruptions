@@ -1,0 +1,608 @@
+---
+title:  'Empirical Estimation of Economic Resilience to Infrastructure Disruptions'
+subtitle: 'Discussant Summary'
+author:
+- C. Blain Morin^[The Ohio State University]
+- Noah Dormady\footnotemark[1]
+- Adam Rose^[University of Southern California]
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "Economic impacts from natural disasters are of increasing concern to public policymakers. Generally, these impacts take two forms: property damage and business interruption (BI). Although property damage can be significant, the BI that results from interruptions in the flows of goods and services is consequential. Critical infrastructure disruptions (e.g., electricity, gas, water, communications, and transportation disturbances) play a major role in the ability of a firm to continue production in the aftermath of a disaster. Novel metrics for measuring resilience are proposed using a production theory foundation. We estimate these new metrics using survey data collected from firms affected by Hurricane Harvey. We find that labor disruptions and gas outages disruptions are associated with the highest potential BI. Moreover, we find that businesses are more resilient to labor disruptions than gas outages."
+header-includes:
+   - \usepackage{rotating}
+   - \usepackage{placeins}
+   - \usepackage{xcolor}
+output: 
+  pdf_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+
+library(tidyverse)
+library(stargazer)
+library(haven)
+
+wide.df =  read_dta("Combined_Sandy_Harvey-Oct-08-2019-wide.dta")
+
+wide.df = wide.df %>%
+  filter(all_outliers == 0)
+
+harvey = wide.df %>%
+  filter(hurricane == 1) %>%
+  filter(none == 0)
+
+```
+
+\newpage
+\tableofcontents
+\newpage
+
+# Introduction
+
+* Research Question: Are businesses more/less resilient to certain infrastructure disruptions?
+  * I.e., Are losses from certain disruption types more avoidable?
+
+* While resilience is an increasingly prominent topic, there is a need for greater specificity in its measurement. 
+
+* Better resilience measurement allows for a more nuanced understanding of the ability of firms to reduce business interruption (BI) in the aftermath of disasters. Identifying the disruptions that businesses struggle to deal with can guide policy makers, disaster managers, firms, communities, etc. toward more optimal recovery strategies. 
+
+* **Economic Resilience:** The efficient use of resources in the aftermath of a disaster that aims to reduce business interruption. Economic resilience is more concerned with preventing interruptions in the flows of goods and services in an economy rather than mitigating damage to capital stock or property.
+
+* Unit of analysis: Individual Firms affected by Hurricane Harvey, one of the most costly disasters in recent US history.
+
+## Contributions
+
+* **Theoretical contribution:** We propose a novel metric, the *weighted Resilience Metric (wRM)*, which increases resilience measurement validity.
+
+* **Empirical Contribution:** We measure the wRM metric with a survey instrument. These data allow us to compare the resilience outcomes of different firms when faced with different disaster-induced disruptions.
+
+# Resilience Measurement
+
+Observational studies often employ a metric whose main counterfactual is the *sales revenue* that would have occurred had the disaster not happened. We posit that these analyses fail to fully capture the "rebounding" or "bounce-back" that is core to the concept of resilience. We propose a metric that ameliorates this issue by employing an alternative counterfactual: the *maximum potential losses* faced by a firm. These approaches are compared below.
+
+## Production Theory Framework:
+
+As a simplified example, we consider a firm that produces outputs using some combination of capital ($K$) and labor ($L$) in Figure 1. 
+
+1.) Before the disaster, the firm is assumed to be producing at its optimal point, $A^*$.
+
+2.) After the disaster, the firm becomes both labor and capital constrained at $\bar{L}$ and $\bar{K}$, respectively.
+
+3.) These labor and capital constraints prevent the firm from reaching $A^*$. 
+
+4.) If the firm were to maintain its pre-disaster labor:capital ratio ($A^*$), but at the labor constraint, it would drop in output down to $B^*$. This represents an *unobserved* output if the firm were to have taken no action. 
+
+5.) We define **maximum potential losses** as the difference in quantities (or revenue) produced at $A^*$ and $B^*$.
+
+6.) In this example, the firm can reach a higher output by substituting capital for labor. In Figure 1, this substitution is the shift along the isoquant from $C^*$ to $C'$. 
+
+7.) We define **avoided losses** as the difference between the output (or revenue) the firm winds up at after implementing substitution and the maximum potential losses, or the difference in quantities produced at $C^*$ and $B^*$.
+
+8.) The **losses due to the disaster** is the difference between the output (or revenue) that the firm would have produced had there been no disaster (proxied by $A^*$) and the output the firm winds up at after using substitution, ($B^*$). 
+
+![Production Theory Framework]("x.png") 
+
+## A lost sales revenue approach
+
+Most empirical resilience work operationalizes the sales revenue lost due to the disaster as a comparison metric. While useful, this narrow focus may miss or underestimate the "rebounding" that has occurred. Missing the "rebounding" misses the heart of the resilience concept. For example, a study may choose to look at the percentage of revenue lost due to the disaster as the resilience outcome:
+
+$$\% LostSR = \frac{E[SR_{No Disaster}] - SR_{Observed}}{E[SR_{NoDisaster}]}$$
+
+Visually, this maps to the quantities that are highlighted in red in Figure 2:
+
+\FloatBarrier
+
+![Percent Sales Revenue Lost]("y.png")
+
+\FloatBarrier
+
+* This approach requires estimation of the sales revenue that would have occurred had there been no disaster ($E[SR_{NoDisaster}]$). This quantity can be estimated through forecasting and survey approaches.
+
+## A maximum potential loss approach
+
+As mentioned, using the percentage of sales revenue lost as a resilience metric can be problematic because the observed revenue often is measured *after* resilience actions or tactics have already occurred. Instead, resilience can be better captured by comparing to a theoretical case where the firm did nothing in response ($B^*$).
+
+* $B^*$ is not observed and needs to be estimated.
+  * Could use input-output tables.
+  * We use a survey instrument to estimate this quantity.
+
+### Resilience Metric (RM)
+
+As a first step, we define the *Resilience Metric* (RM) as the percent of maximum potential losses that a firm avoids using resilience tactics:
+
+$$RM = \frac{AvoidedLosses}{MaxPotential}$$
+
+Visually this maps to the ratio of quantities or revenues highlighted in red in Figure 3:
+
+![Resilience Metric (RM)]("z.png")
+
+### Weighted Resilience Metric (wRM)
+
+However, the RM is a bit coarse in that it does not account for the amount of potential losses at stake. For example, if a firm has an $RM=.5$, then it avoided 50\% of its maximum potential losses. However, with only the RM, we do not know if the magnitude of maximum potential losses was low or high. In other words, we want to differentiate cases where there were proportionally more losses at stake from cases where there was relatively little at stake.
+
+To account for losses at stake, we weight the RM by the percent of output or sales revenue at risk. Mathematically the weight, $w$, is:
+
+$$w = \frac{MaxPotential}{E[SR_{NoDisaster}]}$$
+
+* $w=1$ when entire SR is at risk
+* $w\to0$ when SR is not at risk
+
+Weighting the RM yields the following metric:
+
+$$wRM = w*RM = \frac{MaxPotential}{E[SR_{NoDisaster}]} * \frac{AvoidedLosses}{MaxPotential} = \frac{AvoidedLosses}{E[SR_{NoDisaster}]}$$
+These quantities or revenues are again represented visually in Figure 4:
+
+
+![Weighted Resilience Metric (wRM)]("xy.png")
+
+
+* Recall, our research question is: Are losses from some disruptions more avoidable than others? The wRM helps answer this question because:
+  * $wRM = 1$ is high bounce-back (losses are more avoidable).
+  * $wRM = 0$ is low bounce-back (losses are less avoidable).
+
+
+# Survey Data
+
+* Maximum potential losses and expected sales revenue are not observed and need to be estimated
+
+* We use a survey instrument for these estimates. The survey instrument:
+  * Was administered by a professional survey firm 13 months after Hurricane Harvey to businesses that were directly affected by the storm
+  * Compensated respondents about \$60
+  * Asked for estimates of:
+    * The expected sales revenue for the year after the hurricane
+    * How much revenue was lost
+    * The disruptions the firms faced
+    * The actions, or tactics, that the firm implemented to avoid business interruption
+    * How much more they expected to lose if no tactics were used
+
+
+# Results
+
+\FloatBarrier
+
+Overall, we received 132 responses, with a response rate of about 21\%. 
+
+```{r, fig.height=3, fig.width=8}
+
+hdf = harvey %>%
+  select(vrec, 
+         title,
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes)) %>%
+  mutate(title = as.factor(title))
+
+hdf$industry_codes1 = hdf$industry_codes
+levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
+                                "Transportation, Communications,\nand Utilities",
+                                "Manufacturing",
+                                "Wholesale, Retail, Trade",
+                                "Finance, Insurance,\nand Real Estate",
+                                "Service Sector")
+
+levels(hdf$title) = c("Owner",
+                        "Partner",
+                        "Chairperson",
+                        "CEO",
+                        "CFO",
+                        "COO",
+                        "Managing Director",
+                        "President",
+                        "Executive Vice President",
+                        "Other C-Level",
+                        "Other Company Officer",
+                        "Principal",
+                        "Other")
+
+m = hdf %>%
+  ggplot(aes(x = forcats::fct_rev(forcats::fct_infreq(title)))) +
+  geom_bar(aes(fill = industry_codes1)) + 
+  scale_fill_brewer(type = "qual", palette = 8) +
+  theme_bw() +
+  ylab("Count") +
+  xlab("") +
+  coord_flip() +
+  labs(fill = "Industry Category")
+
+m
+
+```
+
+* As we see, a majority of businesses that responded were in the service sector. 
+
+* Owners, managing directors, and CEOs were the top three titles of respondents. 
+
+\FloatBarrier
+
+## Descriptive Statistics
+
+### Metric Distributions By Sector
+
+\FloatBarrier
+
+```{r, fig.width=8}
+
+hdf = harvey %>%
+  select(vrec, 
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes))
+
+hdf$industry_codes1 = hdf$industry_codes
+levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
+                               "Transportation, Communications,\nand Utilities",
+                               "Manufacturing",
+                               "Wholesale, Retail, Trade",
+                               "Finance, Insurance,\nand Real Estate",
+                               "Service Sector")
+
+
+temp1 = hdf %>%
+  mutate("Lost SR" = annual_lost_sales__percent / 100) %>%
+  select(vrec,industry_codes1, w, RM, wRM, "Lost SR")
+
+temp1 = temp1 %>%
+  gather(key = "Metric", value = "Value", w:"Lost SR")
+
+temp1$Metric = factor(temp1$Metric, levels = c("w", "RM", "wRM", "Lost SR"))
+
+a = temp1 %>%
+  ggplot(aes(x = Metric, y = Value)) +
+  geom_boxplot(aes(fill = Metric)) +
+  theme_bw() +
+  ylab("") +
+  xlab("") +
+  facet_wrap(~industry_codes1) +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer() +
+  theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1))
+
+
+a
+
+```
+
+* The above box plot shows the observed distribution of w, RM, wRM and Lost SR metrics, by sector.
+
+* We see from the w boxes that the revenue at risk ranged from almost none to almost 100\% of a firm's annual revenue.
+
+* Generally, RMs and wRMs are low.
+
+* The finance, insurance, and real estate sectors seem to have been the least disruptive of the sectors in terms of lost SR and SR at risk. 
+
+\FloatBarrier
+
+### Disruptions Contributing to Business Interruption, by Sector
+
+\FloatBarrier
+
+```{r}
+
+hdf = harvey %>%
+  select(vrec, 
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes,
+         starts_with("bi", ignore.case = FALSE)) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes))
+
+hdf$industry_codes1 = hdf$industry_codes
+levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
+                                "Transportation, Communications,\nand Utilities",
+                                "Manufacturing",
+                                "Wholesale, Retail, Trade",
+                                "Finance, Insurance,\nand Real Estate",
+                                "Service Sector")
+
+
+hdff = hdf %>%
+  gather(key = "BI", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
+
+hdff$BI = factor(hdff$BI)
+levels(hdff$BI) = c("Communications", "Employees Moved", "Employees Can't Work", "Facility Underwater",
+                    "Gas Outage", "Power Outage", "Supply Chain", "Transportation", "Water Outage")
+
+b = hdff %>%
+  filter(Percent != 0) %>%
+  ggplot(aes(x = BI, y = Percent)) +
+  geom_boxplot(aes(fill = BI)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1)) +
+  theme(legend.position = "none") +
+  facet_wrap(~industry_codes1) +
+  xlab("Disruption Type") +
+  theme(strip.background =element_rect(fill="black")) +
+  theme(strip.text = element_text(colour = 'white')) +
+  scale_fill_brewer()
+  
+b
+
+```
+
+
+* The above plot shows the distribution of the percent that each disruption type was reported to contribute to a firm's overall business interruption. For example, firms in the wholesale, retail, and trade sectors reported that on average, 25\% of their business interruption following Hurricane Harvey was due to supply chain disruptions. 
+
+* Again, the Finance, Insurance, and Real Estate sectors seem to have a slightly different profile of disruptions when compared to the rest of the sectors. 
+
+\FloatBarrier
+
+## Regression Results: Resilience Outcomes versus Different Business Interruptions
+
+In this section, we regress w, wRM, and percent lost sales revenue on the percent that certain business disruptions contributed to overall business disruption, the count of employees, whether or not the firm incurred property damage, and the firm's sector. Preliminary regression results are displayed in Table 1.
+
+\FloatBarrier
+
+
+```{r}
+
+hdf = harvey %>%
+  select(vrec, 
+         exp_sales_annual_if_no_hurricane, 
+         annual_lost_sales__percent, 
+         avoided_losses_using_tactics, 
+         months_to_recover,
+         industry_codes,
+         starts_with("bi", ignore.case = FALSE),
+         employees_during_recovery,
+         property_damage) %>%
+  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
+  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
+  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
+  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
+  mutate(w = ifelse(w > 1, 1, w)) %>%
+  mutate(wRM = w * RM) %>%
+  mutate(industry_codes = as.factor(industry_codes)) %>%
+  mutate(capital_i = ifelse(industry_codes == 4 | industry_codes == 6, 0, 1))
+
+hdff = hdf %>%
+  group_by(industry_codes) %>%
+  mutate(med_cant.work = median(bi_employees_unable_to_work)) %>%
+  mutate(med_moved = median(bi_employees_moved_away)) %>%
+  mutate(med_comm = median(bi_communications)) %>%
+  mutate(med_supply = median(bi_supply_chain)) %>%
+  mutate(med_power = median(bi_power_outages)) %>%
+  mutate(med_gas = median(bi_natural_gas_outages)) %>%
+  mutate(med_water = median(bi_water_outages)) %>%
+  mutate(med_transport = median(bi_transportation)) %>%
+  ungroup()
+
+
+hdfff = hdff %>%
+  mutate(over_med_cant.work = ifelse(bi_employees_unable_to_work > med_cant.work, 1, 0)) %>%
+  mutate(over_med_moved = ifelse(bi_employees_moved_away > med_moved, 1, 0)) %>%
+  mutate(over_med_comm = ifelse(bi_communications > med_comm, 1, 0)) %>%
+  mutate(over_med_supply = ifelse(bi_supply_chain > med_supply, 1, 0)) %>%
+  mutate(over_med_power = ifelse(bi_power_outages > med_power, 1, 0)) %>%
+  mutate(over_med_gas = ifelse(bi_natural_gas_outages > med_gas, 1, 0)) %>%
+  mutate(over_med_water = ifelse(bi_water_outages > med_water, 1, 0)) %>%
+  mutate(over_med_transport = ifelse(bi_transportation > med_transport, 1, 0))
+
+hd4 = hdfff %>%
+  mutate(wRM = wRM * 100) %>%
+  mutate(w = w * 100) %>%
+  mutate(log.employees = log(employees_during_recovery)) %>%
+  rename(lostSR = annual_lost_sales__percent) %>%
+  drop_na(wRM)
+
+
+```
+
+
+```{r, results='asis'}
+
+w1 = lm(w ~ over_med_cant.work +
+            over_med_moved +
+            over_med_comm +
+            over_med_supply +
+            over_med_power + 
+            over_med_gas + 
+            over_med_water +
+            over_med_transport +
+            log.employees +
+            property_damage +
+            industry_codes,
+          data = hd4)
+
+wRM1 = lm(wRM ~ over_med_cant.work +
+            over_med_moved +
+            over_med_comm +
+            over_med_supply +
+            over_med_power + 
+            over_med_gas + 
+            over_med_water +
+            over_med_transport +
+            log.employees +
+            property_damage +
+            industry_codes,
+          data = hd4)
+
+lSR1 = lm(lostSR ~ over_med_cant.work +
+            over_med_moved +
+            over_med_comm +
+            over_med_supply +
+            over_med_power + 
+            over_med_gas + 
+            over_med_water +
+            over_med_transport +
+            log.employees +
+            property_damage +
+            industry_codes,
+          data = hd4)
+
+cov.labs = c("BI Employees can't work",
+             "BI Employees moved away",
+             "BI Communication Disruption",
+             "BI Supply Chain Disruption",
+             "BI Power Outage",
+             "BI Gas Outage",
+             "BI Water Outage",
+             "BI Transportation Disruption",
+             "log(employee count)",
+             "Incurred Property Damage = Yes",
+             "Transport, Comm, Utilities Sectors",
+             "Manufacturing Sector",
+             "Wholesale, Retail, Trade Sectors",
+             "Finance, Insurance, Real Estate Sectors",
+             "Service Sector")
+# 
+# stargazer(w1, wRM1, lSR1,
+#           title = "Preliminary Regression Results",
+#           report = "vc*",
+#           no.space=TRUE,
+#           header = FALSE,
+#           single.row = T,
+#           covariate.labels = cov.labs,
+#           digits = 2)
+
+```
+
+
+
+\begin{table}[!htbp] \centering 
+  \caption{Preliminary Regression Results} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & w & wRM & lostSR \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ BI Employees can't work & 2.07 & 1.38 & 0.55 \\ 
+  BI Employees moved away & \color{blue}13.41$^{**}$ & \color{blue}7.84$^{**}$ & \color{blue}5.69 \\ 
+  BI Communication Disruption & 3.25 & $-$0.63 & 3.79 \\ 
+  BI Supply Chain Disruption & $-$1.01 & $-$3.85 & 2.58 \\ 
+  BI Power Outage & 1.16 & 3.11 & $-$2.20 \\ 
+  BI Gas Outage & \color{red}15.65$^{**}$ & \color{red}$-$4.55 & \color{red}20.26$^{***}$ \\ 
+  BI Water Outage & 5.57 & 3.27 & 2.83 \\ 
+  BI Transportation Disruption & 6.74 & 3.69 & 2.86 \\ 
+  log(employee count) & $-$5.46$^{***}$ & $-$2.41$^{***}$ & $-$3.21$^{***}$ \\ 
+  Incurred Property Damage = Yes & 10.92$^{*}$ & $-$3.29 & 14.45$^{***}$ \\ 
+  Transport, Comm, Utilities Sectors & 1.07 & 0.15 & 2.57 \\ 
+  Manufacturing Sector & $-$17.43 & $-$6.44 & $-$10.96 \\ 
+  Wholesale, Retail, Trade Sectors & $-$0.44 & $-$2.81 & 2.63 \\ 
+  Finance, Insurance, Real Estate Sectors & $-$24.21$^{*}$ & $-$15.40$^{**}$ & $-$8.91 \\ 
+  Service Sector & $-$12.66 & $-$8.68$^{*}$ & $-$3.93 \\ 
+  Constant & 44.65$^{***}$ & 22.00$^{***}$ & 23.23$^{**}$ \\ 
+ \hline \\[-1.8ex] 
+Observations & 124 & 124 & 124 \\ 
+R$^{2}$ & 0.32 & 0.24 & 0.34 \\ 
+Adjusted R$^{2}$ & 0.22 & 0.13 & 0.24 \\ 
+Residual Std. Error (df = 108) & 27.79 & 13.55 & 21.92 \\ 
+F Statistic (df = 15; 108) & 3.33$^{***}$ & 2.22$^{***}$ & 3.66$^{***}$ \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\end{table} 
+\footnotesize * BI covariates are indicators = 1 when the observation experienced higher than average disruption for its sector. The reference category for sector is Agriculture, Mining, and Construction.
+\FloatBarrier
+
+
+\begin{table}[!htbp] \centering 
+  \caption{Preliminary Regression Results} 
+  \label{} 
+\begin{tabular}{@{\extracolsep{5pt}}lccc} 
+\\[-1.8ex]\hline 
+\hline \\[-1.8ex] 
+ & \multicolumn{3}{c}{\textit{Dependent variable:}} \\ 
+\cline{2-4} 
+\\[-1.8ex] & w & wRM & lostSR \\ 
+\\[-1.8ex] & (1) & (2) & (3)\\ 
+\hline \\[-1.8ex] 
+ BI Employees can't work & 2.074 & 1.380 & 0.546 \\ 
+  BI Employees moved away & \color{blue}13.414$^{**}$ & \color{blue}7.843$^{**}$ & \color{blue}5.687 \\ 
+  BI Communication Disruption & 3.251 & $-$0.626 & 3.786 \\ 
+  BI Supply Chain Disruption & $-$1.014 & $-$3.846 & 2.578 \\ 
+  BI Power Outage & 1.161 & 3.108 & $-$2.200 \\ 
+  BI Gas Outage & \color{red}15.653$^{**}$ & \color{red}$-$4.552 & \color{red}20.261$^{***}$ \\ 
+  BI Water Outage & 5.573 & 3.267 & 2.831 \\ 
+  BI Transportation Disruption & 6.739 & 3.692 & 2.857 \\ 
+  log(employee count) & $-$5.462$^{***}$ & $-$2.407$^{***}$ & $-$3.205$^{***}$ \\ 
+  Incurred Property Damage = Yes & 10.923$^{*}$ & $-$3.291 & 14.447$^{***}$ \\ 
+  Transport, Comm, Utilities Sectors & 1.074 & 0.153 & 2.566 \\ 
+  Manufacturing Sector & $-$17.428 & $-$6.443 & $-$10.957 \\ 
+  Wholesale, Retail, Trade Sectors & $-$0.436 & $-$2.814 & 2.633 \\ 
+  Finance, Insurance, Real Estate Sectors & $-$24.210$^{*}$ & $-$15.403$^{**}$ & $-$8.906 \\ 
+  Service Sector & $-$12.663 & $-$8.679$^{*}$ & $-$3.933 \\ 
+  Constant & 44.650$^{***}$ & 22.005$^{***}$ & 23.234$^{**}$ \\ 
+ \hline \\[-1.8ex] 
+Observations & 124 & 124 & 124 \\ 
+R$^{2}$ & 0.316 & 0.236 & 0.337 \\ 
+Adjusted R$^{2}$ & 0.221 & 0.130 & 0.245 \\ 
+Residual Std. Error (df = 108) & 27.793 & 13.550 & 21.921 \\ 
+F Statistic (df = 15; 108) & 3.329$^{***}$ & 2.221$^{***}$ & 3.660$^{***}$ \\ 
+\hline 
+\hline \\[-1.8ex] 
+\textit{Note:}  & \multicolumn{3}{r}{$^{*}$p$<$0.1; $^{**}$p$<$0.05; $^{***}$p$<$0.01} \\ 
+\end{tabular} 
+\FloatBarrier
+\footnotesize * BI covariates are indicators = 1 when the observation experienced higher than average disruption for its sector. The reference category for sector is Agriculture, Mining, and Construction.
+\end{table} 
+\FloatBarrier
+
+* **w Regression (Equation 1 in Table 1):**
+  * On average, firms that reported a higher than average disruption from employees moving away or gas outages are associated with a 13.4 and 15.7 higher percentage of sales revenue at risk relative to firms, respectively.
+  * As we saw in the exploratory analyses, firms in the Finance, Insurance, and Real Estate Sectors are associated with lower potential revenue disruptions, on average and all else equal.
+
+* **wRM Regression (Equation 2 in Table 1):**
+  * On average, firms that reported a higher than average disruption from employees moving away had significantly higher resilience. Firms that reported a higher than average disruption from gas outages are associated with lower levels of resilience.
+  
+* **\% Lost Sales Revenue Regression (Equation 3 in Table 1):**
+  * On average, firms reported a 5.7\% higher lost sales revenue if they reported a higher than average disruption due to employees moving away (not significant at the 5\% level). Firms reported a 20.3\% higher percentage loss in sales revenue if their BI due to gas outages was higher than average. This is statistically and practically significant. 
+
+
+### Regression Results: Significance of Metric Choice (Comparing the blue rows in Table 1 to the red rows)
+
+In the Table 1 regression results, we see that firms reported that gas disruptions were associated with particularly high impacts on sales revenue. Though lesser in magnitude, reported disruptions due to employees moving away were also associated with high impacts on sales revenue. For decision makers in this arena, it may be tempting to direct resources toward gas outage resilience. On one hand, it is true that there are high sales revenue losses associated with gas outages and thus there is a high potential for avoiding such losses. On the other hand, evaluating the situation from a maximum potential loss standpoint (i.e., using the insights from the wRM regression), we see that gas disruptions, while highly disruptive are also less avoidable by firms. In this sense, it may be more effective to direct resources toward gas disruption mitigation than gas disruption resilience. Likewise, it may be more effective to direct resilience enhancement policies toward firms experiencing labor disruptions rather than gas outages.
+
+# Applications / Concluding Remarks
+
+* The metrics and survey methodology presented here apply generally to any type of disaster or shock.
+  * The characterization of disaster impacts through property damage and disruption types can be used for events other than hurricanes.
+  
+  * We are administering the survey results and collecting more data through commercialized software at: resiliencecalculator.com
+
+* There is a need to think beyond lost sales revenue as a metric for resilience. 
+
+* As discussed in Section 4.2.1, expanding analyses beyond lost revenue guides decisions regarding mitigation and resilience decisions.
+
+* Future directions:
+  * Need to factor in costs associated with resilience with this framework.
+  * Investigate the use of different tactics under different disruptions. 
+
+
+
+
+

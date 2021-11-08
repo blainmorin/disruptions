@@ -1,8 +1,8 @@
 ---
 title: "Empirical Estimation of Economic Resilience to Infrastructure Disruptions"
-author: "C. Blain Morin$^1$, Noah Dormady$^1$, Adam Rose$^2$"
-institute: "$^1$The Ohio State University, $^2$ University of Southern California"
-date: "11/1/21"
+author: "C. Blain Morin$^1$, Noah Dormady$^1$"
+institute: "$^1$John Glenn College of Public Affairs, The Ohio State University"
+date: "11/8/21"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -12,8 +12,6 @@ output:
       countIncrementalSlides: false
 
 ---
-
-
 
 ```{r setup, include=FALSE}
 
@@ -49,9 +47,10 @@ harvey = wide.df %>%
   * Survey from firms affected by Hurricane Harvey
 
 * **Contributions**
-  * Find that most firms struggled to rebound after the hurricane
   * Propose a novel metric for resilience measurement
-  * Create an empirical framework to guide further research
+  * Use a survey instrument to measure this new metric
+    * Labor and gas outages were the most potentially disruptive to business operations
+    * Firms were more resilient to labor disruptions than gas outages 
 
 ???
 
@@ -63,7 +62,7 @@ harvey = wide.df %>%
 
 - To investigate this question, we surveyed firms affected by Hurricane Harvey, which was one of the most costly storms in recent history, about their experience and decisions in the aftermath of the storm.
 
-- In this paper, we propose a novel resilience metric and a framework to mobilize survey data for resilience measurement.   In general, we find that firms found it difficult to rebound after the hurricane. 
+- In this paper, we propose a novel resilience metric and a framework to mobilize survey data for resilience measurement. We find that gas and labor disruptions were associated with the highest potential impacts to business operations. We also find that firms were more resilient to labor disruptions than gas outages. 
 
 ---
 
@@ -86,6 +85,7 @@ harvey = wide.df %>%
 
 
 ---
+
 
 # Business Interruption (BI) versus Property Damage (PD)
 
@@ -154,6 +154,7 @@ This labor constraint is represented on the figure as a horizontal line, Lbar.
 
 ---
 
+
 # Resilience Measurement
 
 ```{r, fig.retina=2}
@@ -164,7 +165,7 @@ include_graphics("c.png")
 
 ???
 
-In this example we are also imposing a capital constraint at Kbar. As you can see, these contraints prevent the firm from reaching its optimum output at A*.
+In this example we are also imposing a capital constraint at Kbar. As you can see, these constraints prevent the firm from reaching its optimum output at A*.
 
 ---
 
@@ -387,6 +388,7 @@ Thus, we now have constructed a metric that allows us to investigate the researc
 
 ---
 
+
 ## Results: Count of Responses, By Job Title
 
 * 132 Responses
@@ -574,395 +576,28 @@ b
 
 - Here are some more boxplots. These show the distribution of the percent that each disruption type was reported to contribute to a firm's overall business interruption. For example, firms in the wholesale, retail, trade sectors reported that on average, 25\% of their business interruption following Hurricane Harvey was due to supply chain disruptions. 
 
-- Again, Finance, Insurance, and Real Estate Sectors seem to exhibit a slightly different pattern than the rest. For the most part, the profile of disruptions affecting different sectors is pretty flat. I think as a disaster gets more catastrophic, it may be harder for firms to disentangle the disruptions. In other words, it may be hard to isolate which disruption is causing BI when everything is disrupted.   
+- Again, Finance, Insurance, and Real Estate Sectors seem to exhibit a slightly different pattern than the rest. For the most part, the profile of disruptions affecting different sectors is pretty flat.
 
 
 ---
 
-## Results: Lost Sales Revenue Versus wRM 
+## Results: Metric Regressions
 
-* Disruption intensity is high if the disruption percentage was above the 70th percentile for that disruption type.
+```{r, out.width="100%"}
 
-```{r, dpi = 400, fig.width=11, fig.height=6.8}
-
-
-hdf = harvey %>%
-  select(vrec, 
-         exp_sales_annual_if_no_hurricane, 
-         annual_lost_sales__percent, 
-         avoided_losses_using_tactics, 
-         months_to_recover,
-         industry_codes,
-         starts_with("bi", ignore.case = FALSE),
-         43:53) %>%
-  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
-  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
-  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
-  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
-  mutate(w = ifelse(w > 1, 1, w)) %>%
-  mutate(wRM = w * RM) %>%
-  mutate(industry_codes = as.factor(industry_codes)) 
-
-hdf$industry_codes1 = hdf$industry_codes
-levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
-                                "Transportation, Communications,\nand Utilities",
-                                "Manufacturing",
-                                "Wholesale, Retail, Trade",
-                                "Finance, Insurance,\nand Real Estate",
-                                "Service Sector")
-
-
-hdff = hdf %>%
-  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
-
-hdff$BI_Type = as.factor(hdff$BI_Type)
-levels(hdff$BI_Type) = c("Communication",
-                         "Employees Moved",
-                         "Employees Can't Work",
-                         "Facility Underwater",
-                         "Gas Outage",
-                         "Power Outage",
-                         "Supply Chain",
-                         "Transportation",
-                         "Water Outage")
-
-hdfff = hdff %>%
-  group_by(BI_Type) %>%
-  mutate(cutoff = quantile(Percent, probs = .7, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(iBI = ifelse(Percent > cutoff, "High", "Low"))
-
-hd5 = hdfff %>%
-  mutate(annual_lost_sales__percent = annual_lost_sales__percent / 100) %>%
-  rename("Lost SR" = annual_lost_sales__percent) %>%
-  gather(key = "Metric", value = "Value", c(wRM, "Lost SR"))
-
-n = hd5 %>%
-  ggplot(aes(x = Value, y = iBI, vline_color = ..quantile..)) +
-  geom_density_ridges(aes(color = Metric, fill = Metric), alpha = .8, scale = 1,
-                      quantiles = 2, quantile_lines = TRUE, rel_min_height = .02) +
-  facet_wrap(~BI_Type) +
-  scale_y_discrete(limits = c("Low", "High")) +
-  theme_bw() +
-  theme(strip.background =element_rect(fill="black")) +
-  theme(strip.text = element_text(colour = 'white')) +
-  scale_fill_brewer(type = "qual", palette = 4) +
-  scale_color_brewer(type = "qual", palette = 4) +
-  ylab("Disruption Intensity") +
-  xlim(0, 1) +
-  scale_discrete_manual("vline_color",
-                        values = c("gray23", "red"), guide = FALSE) 
-  
-  
-n
-
-```
-
-
-???
-
-- Here are some density plots. These show the distribution of lost sales revenues and weighted RMs among firms that experienced the disruption. Within each disruption type, the observations are grouped by whether they were above or below the 70th percentile percentage for that disruption. 
-
-- There are some slight differences between the high and low groups. The most pronounced, in terms of the weighted RM is in transportation. Comparing the blue densities, we can say that firms that experienced a higher than average transportation disruption rebounded better than firms that experienced the other disruptions (I'm exaggerating this claim here for illustration, as we can see that the difference is not likely to be statistically significant).
-
-- In terms of lost sales revenue, we see that firms with high transportation disruptions were just as worse off as firms with other disruptions. 
-
-
----
-
-## Causal Mechanism: Tactics
-
-* Firms were asked if they implemented any of the following 11 tactics:
-
-```{r, fig.retina=2.5}
-
-include_graphics("tactics.PNG")
-
-```
-
-
-???
-
-- Next we posit that the tactics used by firms to reduce business interruption are the link between disruption profiles or disaster impacts to resilience outcomes.
-
-- Here is a list of the tactics and their definitions that firms were asked about using. These tactics come from both the resilience and supply chain literatures. 
-
-- We can imagine two channels that give give to different tactics being implemented. First, we'd expect that the magnitude of possible disruption (which we call the w) to impact tactic use. Certain tactics, like say relocating, may only be used when the situation is very dire. 
-
--We could also imagine that certain distruptions call for different tactics. For example, firms may respond differently to power outages than they would to a supply chain disruption. 
-
----
-
-## Count of Tactics Used 
-
-```{r, fig.width=11, fig.height=7}
-
-hdf = harvey %>%
-  select(vrec, 
-         exp_sales_annual_if_no_hurricane, 
-         annual_lost_sales__percent, 
-         avoided_losses_using_tactics, 
-         months_to_recover,
-         industry_codes,
-         starts_with("bi", ignore.case = FALSE),
-         43:53) %>%
-  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
-  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
-  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
-  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
-  mutate(w = ifelse(w > 1, 1, w)) %>%
-  mutate(wRM = w * RM) %>%
-  mutate(industry_codes = as.factor(industry_codes)) 
-
-hdf$industry_codes1 = hdf$industry_codes
-levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
-                                "Transportation, Communications,\nand Utilities",
-                                "Manufacturing",
-                                "Wholesale, Retail, Trade",
-                                "Finance, Insurance,\nand Real Estate",
-                                "Service Sector")
-
-
-hdff = hdf %>%
-  select(conservation:resource_sharing) %>%
-  rowSums()
-
-hdf$n_tactics = hdff
-
-hdfff = hdf %>%
-  select(vrec, industry_codes1, n_tactics, w, RM, wRM, annual_lost_sales__percent) %>%
-  mutate(annual_lost_sales__percent = annual_lost_sales__percent / 100) %>%
-  rename("Lost SR" = annual_lost_sales__percent) %>%
-  gather(key = "Metric", value = "Percent", w:"Lost SR")
-
-c = hdfff %>%
-  ggplot(aes(x = Percent, y = n_tactics)) +
-  geom_point(aes(color = Metric), alpha = .6) +
-  geom_smooth(method = "lm", aes(color = Metric), se = FALSE, size = 1.2, alpha = .8) +
-  facet_wrap(~industry_codes1) +
-  theme_bw() +
-  theme(strip.background =element_rect(fill="black")) +
-  theme(strip.text = element_text(colour = 'white')) +
-  ylab("Count of Tactics Used") +
-  xlab("") +
-  scale_color_brewer(type = "qual", palette = 3)
-  
-ggplotly(c)
-
+include_graphics("regs.png")
 
 ```
 
 ???
 
-- Here are some scatter plots. When looking at the magnitude of possible diruption, w, we see a bit of a positive correlation with the number of tactics used: higher potential losses are associated with more tactics.  
+* Heres a regression table. We regress three different metrics: the weight, the weighted RM, and the lost sales revenue percentage on a few key covariates. 
 
+* The BI terms are indicators which equal 1 if the firm reported that its business interruption due to that disruption type was higher than the sector median. For example if we look in the first equation for the weight, we see that a higher than average gas outage is associated with a 15.7\% increase in the revenue at risk. 
 
----
+- We also include a term for the size of the firm (using employees as a proxy). Here the value is logged. Again using the first equation as an example, a 1\% increase in employee count is associated with a .05 percent decrease in the amount of sales revenue at risk. 
 
-## Disruption Profile and Tactic Use
+_ There is also an indicator variable for property damage which equals 1 if the firm incurred physical damage. Using equation 3, we see that firms that incurred damage lost 14.5\% more sales revenue, on average than firms who did not, all else equal. 
 
-```{r, dpi = 400, fig.width=11, fig.height=6.8}
+There is also a categorical variable for the firm sector. Using equation 2, we see that the finance, insurance, and real estate sectors are associated with a 15.4 lower weighted RM when compared to the reference category, which was agriculture, mining, and construction. 
 
-hdf = harvey %>%
-  select(vrec, 
-         exp_sales_annual_if_no_hurricane, 
-         annual_lost_sales__percent, 
-         avoided_losses_using_tactics, 
-         months_to_recover,
-         industry_codes,
-         starts_with("bi", ignore.case = FALSE),
-         43:53) %>%
-  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
-  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
-  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
-  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
-  mutate(w = ifelse(w > 1, 1, w)) %>%
-  mutate(wRM = w * RM) %>%
-  mutate(industry_codes = as.factor(industry_codes)) 
-
-hdf$industry_codes1 = hdf$industry_codes
-levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
-                                "Transportation, Communications,\nand Utilities",
-                                "Manufacturing",
-                                "Wholesale, Retail, Trade",
-                                "Finance, Insurance,\nand Real Estate",
-                                "Service Sector")
-
-
-hdff = hdf %>%
-  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
-
-hdff$BI_Type = as.factor(hdff$BI_Type)
-levels(hdff$BI_Type) = c("Communications",
-                         "Employees Moved",
-                         "Employees Can't Work",
-                         "Facility Underwater",
-                         "Gas Outage",
-                         "Power Outage",
-                         "Supply Chain",
-                         "Transportation",
-                         "Water Outage")
-
-
-hdfff = hdff %>%
-  gather(key = "Tactic", "Use", conservation:resource_sharing)
-
-hdfff$Tactic = as.factor(hdfff$Tactic)
-levels(hdfff$Tactic) = c("Conservation",
-                         "Excess Capacity",
-                         "Import Substitution",
-                         "Input Substitution",
-                         "Inventories",
-                         "Management\nEffectiveness",
-                         "Production\nRecapture",
-                         "Relocation",
-                         "Resource\nIsolation",
-                         "Resource\nSharing",
-                         "Technological\nChange")
-
-
-k = hdfff %>%
-  filter(Use == 1) %>%
-  filter(Percent > 0) %>%
-  ggplot(aes(y = BI_Type, x = Percent)) +
-  geom_density_ridges(aes(fill = BI_Type), rel_min_height = .02) +
-  facet_wrap(~Tactic) +
-  theme_bw() +
-  theme(legend.position = "none") +
-  theme(strip.background =element_rect(fill="black")) +
-  theme(strip.text = element_text(colour = 'white')) +
-  scale_fill_brewer() +
-  xlim(0,100) +
-  ylab("")
-
-k
-
-```
-
-???
-
-- Here are some density plots. It's a bit of a null finding, but what I am visually testing here is whether or not we can see differences in the disruption profiles between firms that used different tactics. However, here there's not an obvious difference in the disruption profiles associated with different tactics, other than in the tail behavior.   
-
-
----
-
-## Tactic Use and Metric Distributions
-
-```{r, dpi = 400, fig.width=11, fig.height=6.8}
-
-hdf = harvey %>%
-  select(vrec, 
-         exp_sales_annual_if_no_hurricane, 
-         annual_lost_sales__percent, 
-         avoided_losses_using_tactics, 
-         months_to_recover,
-         industry_codes,
-         starts_with("bi", ignore.case = FALSE),
-         43:53) %>%
-  mutate(ySR_loss = exp_sales_annual_if_no_hurricane * annual_lost_sales__percent / 100) %>%
-  mutate(max_pot_loss = ySR_loss + avoided_losses_using_tactics) %>%
-  mutate(RM = avoided_losses_using_tactics / max_pot_loss) %>%
-  mutate(w = max_pot_loss / exp_sales_annual_if_no_hurricane) %>%
-  mutate(w = ifelse(w > 1, 1, w)) %>%
-  mutate(wRM = w * RM) %>%
-  mutate(industry_codes = as.factor(industry_codes)) 
-
-hdf$industry_codes1 = hdf$industry_codes
-levels(hdf$industry_codes1) = c("Agriculture, Mining,\nand Construction",
-                                "Transportation, Communications,\nand Utilities",
-                                "Manufacturing",
-                                "Wholesale, Retail, Trade",
-                                "Finance, Insurance,\nand Real Estate",
-                                "Service Sector")
-
-
-hdff = hdf %>%
-  gather(key = "BI_Type", value = "Percent", bi_employees_unable_to_work:bi_facility_underwater)
-
-hdff$BI_Type = as.factor(hdff$BI_Type)
-levels(hdff$BI_Type) = c("Communications",
-                         "Employees Moved",
-                         "Employees Can't Work",
-                         "Facility Underwater",
-                         "Gas Outage",
-                         "Power Outage",
-                         "Supply Chain",
-                         "Transportation",
-                         "Water Outage")
-
-
-hdfff = hdff %>%
-  gather(key = "Tactic", "Use", conservation:resource_sharing)
-
-hdfff$Tactic = as.factor(hdfff$Tactic)
-levels(hdfff$Tactic) = c("Conservation",
-                         "Excess Capacity",
-                         "Import Substitution",
-                         "Input Substitution",
-                         "Inventories",
-                         "Management\nEffectiveness",
-                         "Production\nRecapture",
-                         "Relocation",
-                         "Resource\nIsolation",
-                         "Resource\nSharing",
-                         "Technological\nChange")
-
-
-hd4 = hdfff %>%
-  filter(Use == 1) %>%
-  mutate("Lost SR" = annual_lost_sales__percent / 100) %>%
-  gather(key = "Metric", value = "Value", c(w, RM, wRM, "Lost SR")) 
-
-hd4$Metric = factor(hd4$Metric, levels = c("w", "RM", "wRM", "Lost SR"))
-
-l = hd4 %>%
-  ggplot(aes(x = Metric, y = Value)) +
-  geom_boxplot(aes(fill = Metric)) +
-  facet_wrap(~Tactic)+
-  theme_bw() +
-  theme(strip.background =element_rect(fill="black")) +
-  theme(strip.text = element_text(colour = 'white')) +
-  scale_fill_brewer() +
-  xlab("")
-
-l
-
-
-```
-
-???
-
-- Here are some other boxplots. These show metric distributions among firms that used a certain tactic. Here, we are visually inspecting if there is an association between certain tactics and the metrics. There's not really an obvious pattern. Again, weighted RMs are mostly pretty low.   
-
----
-
-# Applications / Conclusion
-
-* Metrics and survey method apply generally to any type of disaster or shock
-
-* Need to think beyond losses in output or sales revenue to fully capture resilience
-
-* Need for more data
-  * Continuing data collection at resiliencecalculator.com
-
-* Identifying where and when firms struggle to bounce back could guides mitigation efforts
-
-* Identifying where and when firms are able to bounce back could bolster resilience policies
-
-
-???
-
-- Overall, we find that firms in our sample generally lost a substantial amount of sales revenue and struggled to avoid business interruption in the year after Hurricane Harvey. In this specific instance, we weren't able to detect a difference between weighted RMs and different business disruptions.
-
-- However, the proposed weighted resilience metric and methodology can be applied to generally to other disaster contexts. General need for more resilience data. We recently released software that administers the survey instrument at resiliencecalculator.com.
-
-- All in all, identifying when resilience benefits are possible can help guide disaster management strategies and direct scarce resources toward more impactful strategies. 
-
-- That's all I have for now. Thank you for listening, I look forward to any comments, questions, or suggestions. 
-
----
-
-# Questions?
-
-* Thank you! Thank you!
-* My email: morin.42@osu.edu
